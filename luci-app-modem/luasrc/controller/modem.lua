@@ -854,14 +854,21 @@ end
 	info 信息
 ]]
 function setPluginVersionInfo(info)
-    for key in pairs(info) do
-        -- Get plugin version
-        local command="apk list | grep '^" .. key .. "-' | awk '{print $1}' | sed -E 's/^" .. key .. "-([0-9]+(\\.[0-9]+)*(\\-r[0-9]+)?)/\\1/'"
-        local plugin_version=shell(command)
-        if plugin_version ~= "" then
-            info[key] = plugin_version
-        end
-    end
+
+	-- 正则表达式
+	local version_regular_expression="[0-9]+.[0-9]+.[0-9]+"
+
+	for key in pairs(info) do
+
+		-- 获取插件版本
+		local command="opkg list-installed | grep -oE '"..key.." - "..version_regular_expression.."' | awk -F' ' '{print $3}' | tr -d '\n'"
+		local plugin_version=shell(command)
+
+		if plugin_version~="" then
+			info[key]=plugin_version
+		end
+	end
+
 end
 
 --[[
