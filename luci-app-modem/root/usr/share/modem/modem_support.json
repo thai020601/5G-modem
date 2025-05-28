@@ -170,8 +170,9 @@
             "manufacturer_id": "1199",
             "manufacturer": "sierra",
             "platform": "qualcomm",
-            "modes":["mbim"],
-            "data_interface": "usb"
+            "data_interface": "usb",
+            "define_connect":"1",
+            "modes":["mbim"]            
             }
 
         },
@@ -246,6 +247,14 @@
                 "mediatek":{
                     "vendor_id":["2c7c"],
                     "product_id":["0700","7001","7003"]
+                }
+            
+            },
+
+            "sierra":{  
+                "qualcomm":{
+                    "vendor_id":["1199"],
+                    "product_id":["90d3"]
                 }
             },
             "fibocom":{

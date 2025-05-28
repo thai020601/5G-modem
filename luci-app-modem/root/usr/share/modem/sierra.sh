@@ -332,8 +332,8 @@ sierra_get_connect_status()
         define_connect="1"
     }
 
-    at_command="AT+CGPADDR=${define_connect}"
-    local ipv4=$(sh ${SCRIPT_DIR}/modem_at.sh $at_port $at_command | grep "+CGPADDR: " | awk -F'"' '{print $2}')
+    at_command="AT+CGPADDR=1"
+    local ipv4=$(sh ${SCRIPT_DIR}/modem_at.sh $at_port $at_command | grep "+CGPADDR: " | awk -F',' '{print $2}')
     local not_ip="0.0.0.0"
 
     #设置连接状态
@@ -644,16 +644,20 @@ sierra_cell_info()
 {
     debug "Sierra cell info"
 
-    at_command='AT!GSTATUS?'
+    local at_command='AT!GSTATUS?'
     response=$(sh ${SCRIPT_DIR}/modem_at.sh $at_port $at_command)
-    
+
     local lte=$(echo "$response" | grep "System mode:" | grep -o "LTE")
     local nr5g_nsa=$(echo "$response" | grep "System mode:" | grep -o "ENDC")
+
+    local at_command='AT!LTEINFO?'
+    local lte_info=$(sh ${SCRIPT_DIR}/modem_at.sh $at_port $at_command)
+
+    local at_command='AT!NRINFO?'
+    local nr_info=$(sh ${SCRIPT_DIR}/modem_at.sh $at_port $at_command)
     if [ -n "$nr5g_nsa" ] ; then
         #EN-DC模式
         network_mode="EN-DC Mode"
-        local at_command='AT!LTEINFO?'
-        lte_info=$(sh ${SCRIPT_DIR}/modem_at.sh $at_port $at_command)
         # Parse LTE parameters
         endc_lte_mcc=$(echo "$lte_info" | grep -A1 "Serving:" | tail -1 | awk '{print $2}')
         endc_lte_mnc=$(echo "$lte_info" | grep -A1 "Serving:" | tail -1 | awk '{print $3}')
@@ -665,10 +669,10 @@ sierra_cell_info()
         #dl_bandwidth_num=$(echo "$response" | grep "LTE Rx chan:" | awk '{print $4}')
         endc_lte_dl_bandwidth=$(echo "$response" | grep "LTE bw:" | awk '{ print $6}')
         endc_lte_tac=$(echo "$response" | grep "TAC:" | awk '{ print $7}' | tr -d '()')
-        endc_lte_earfcn=$(echo "$response" | grep "LTE Rx chan:" | awk '{print $3}')
-        endc_lte_rsrp=$(echo "$response" | grep "PCC Rx0 RSRP:" | awk '{print $3}')
-        endc_lte_rsrq=$(echo "$response" | grep "RSRQ (dB):" | awk '{print $3}')
-        endc_lte_sinr=$(echo "$response" | grep "SINR (dB):" | awk '{print $3}')
+        #endc_lte_earfcn=$(echo "$response" | grep "LTE Rx chan:" | awk '{print $3}')
+        endc_lte_rsrp=$(echo "$response" | grep "PCC Rx0 RSRP:" | awk '{print $8}')
+        endc_lte_rsrq=$(echo "$lte_info" | grep -A1 "Serving:" | tail -1 | awk '{print $11}')
+        endc_lte_sinr=$(echo "$lte_info" | grep -A1 "Serving:" | tail -1 | awk '{print $9}')
 
         # Extract all CA SCell parameters from the data line --> CHUA SUA
         ca_scell_line=$(echo "$lte_info" | sed -n '/CA SCell :/,/WCDMA:/p' | grep -E '^\s+[0-9]+\s')
@@ -684,9 +688,7 @@ sierra_cell_info()
         ca_scell_rsrp=$(echo "$ca_scell_line" | awk '{print $10}')     # -85.8
         ca_scell_rssi=$(echo "$ca_scell_line" | awk '{print $11}')     # -53.3
         ca_scell_sinr=$(echo "$ca_scell_line" | awk '{print $12}')     # 5
-        
-        local at_command='AT!NRINFO?'
-        nr_info=$(sh ${SCRIPT_DIR}/modem_at.sh $at_port $at_command)
+
         # Parse 5G-NSA parameters
         #endc_nr_physical_cell_id=$(echo "$nr_info" | grep "NR5G Cell ID:" | awk '{print $4}')
         endc_nr_band=$(echo "$nr_info" | grep "NR5G band:" | awk '{print $3}')
