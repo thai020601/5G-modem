@@ -52,3 +52,4 @@
 | 美格智能 | SRM815                                             | 高通     | USB          | RMNET，ECM，MBIM，RNDIS，NCM |
 | 美格智能 | SRM825                                             | 高通     | USB          | RMNET，ECM，MBIM，RNDIS，NCM |
 | 美格智能 | SRM825N                                            | 高通     | USB          | RMNET，ECM，MBIM，RNDIS，NCM |
+| Sierra  | EM9190                                            | 高通     | USB          | MBIM                         |                 
