@@ -5,7 +5,7 @@
 SCRIPT_DIR="/usr/share/modem"
 
 #预设
-quectel_presets()
+sierra_presets()
 {
 	at_command='ATI'
 	# sh "${SCRIPT_DIR}/modem_at.sh" "$at_port" "$at_command"
