@@ -414,6 +414,11 @@ retry_set_modem_config()
 			modem_name=$(at ${at_port} ${at_command} | sed -n '2p' | sed 's/\r//g' | tr 'A-Z' 'a-z')
 		}
 
+		[ -z "$modem_name" ] && {
+			at_command="AT+CGMM"
+			modem_name=$(at ${at_port} ${at_command} | sed 's/\r//g' | tr 'A-Z' 'a-z' | grep -v "ok" | | tr -d '\n')
+		}
+
 		#处理特殊的模组名称
 		[ -n "$modem_name" ] && {
 			modem_name="$(handle_special_modem_name ${modem_name})"
