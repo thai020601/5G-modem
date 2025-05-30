@@ -651,10 +651,10 @@ sierra_cell_info()
     local nr5g_nsa=$(echo "$response" | grep "System mode:" | grep -o "ENDC")
 
     local at_command='AT!LTEINFO?'
-    local lte_info=$(sh ${SCRIPT_DIR}/modem_at.sh $at_port $at_command)
+    lte_info=$(sh ${SCRIPT_DIR}/modem_at.sh $at_port $at_command)
 
     local at_command='AT!NRINFO?'
-    local nr_info=$(sh ${SCRIPT_DIR}/modem_at.sh $at_port $at_command)
+    nr_info=$(sh ${SCRIPT_DIR}/modem_at.sh $at_port $at_command)
     if [ -n "$nr5g_nsa" ] ; then
         #EN-DC模式
         network_mode="EN-DC Mode"
@@ -669,7 +669,7 @@ sierra_cell_info()
         #dl_bandwidth_num=$(echo "$response" | grep "LTE Rx chan:" | awk '{print $4}')
         endc_lte_dl_bandwidth=$(echo "$response" | grep "LTE bw:" | awk '{ print $6}')
         endc_lte_tac=$(echo "$response" | grep "TAC:" | awk '{ print $7}' | tr -d '()')
-        #endc_lte_earfcn=$(echo "$response" | grep "LTE Rx chan:" | awk '{print $3}')
+        endc_lte_earfcn=$(echo "$response" | grep "LTE Rx chan:" | awk '{print $4}')
         endc_lte_rsrp=$(echo "$response" | grep "PCC Rx0 RSRP:" | awk '{print $8}')
         endc_lte_rsrq=$(echo "$lte_info" | grep -A1 "Serving:" | tail -1 | awk '{print $11}')
         endc_lte_sinr=$(echo "$lte_info" | grep -A1 "Serving:" | tail -1 | awk '{print $9}')
@@ -691,12 +691,12 @@ sierra_cell_info()
 
         # Parse 5G-NSA parameters
         #endc_nr_physical_cell_id=$(echo "$nr_info" | grep "NR5G Cell ID:" | awk '{print $4}')
-        endc_nr_band=$(echo "$nr_info" | grep "NR5G band:" | awk '{print $3}')
+        endc_nr_band=$(echo "$nr_info" | grep "NR5G band:" | awk '{print $3}'| sed 's/n//')
         endc_nr_bw=$(echo "$nr_info" | grep "NR5G dl bw:" | awk '{print $4}')
         endc_nr_rsrp=$(echo "$nr_info" | grep "NR5G RSRP (dBm):" | awk '{print $4}')
-        endc_nr_rsrq=$(echo "$nr_info" | grep "NR5G RSRQ (dB):" | awk '{print $8}')
+        endc_nr_rsrq=$(echo "$nr_info" | grep "NR5G Rx chan:" | awk '{print $4}')
         endc_nr_sinr=$(echo "$nr_info" | grep "NR5G SINR (dB):" | awk '{print $4}')
-        #endc_nr_arfcn=$(echo "$nr_info" | awk -F '[: \t]+' '{print $9}')
+        endc_nr_arfcn=$(echo "$nr_info" | grep "NR5G SINR (dB):" | awk '{print $4}')
 
 
     else
@@ -736,7 +736,7 @@ sierra_cell_info()
                 #dl_bandwidth_num=$(echo "$response" | grep "LTE Rx chan:" | awk '{print $4}')
                 lte_dl_bandwidth=$(echo "$response" | grep "LTE bw:" | awk '{ print $6}')
                 lte_tac=$(echo "$response" | grep "TAC:" | awk '{ print $7}' | tr -d '()')
-                lte_earfcn=$(echo "$response" | grep "LTE Rx chan:" | awk '{print $3}')
+                lte_earfcn=$(echo "$response" | grep "LTE Rx chan:" | awk '{print $4}')
                 lte_rsrp=$(echo "$response" | grep "PCC Rx0 RSRP:" | awk '{print $3}')
                 lte_rsrq=$(echo "$response" | grep "RSRQ (dB):" | awk '{print $3}')
                 lte_sinr=$(echo "$response" | grep "SINR (dB):" | awk '{print $3}')
@@ -796,98 +796,6 @@ get_sierra_info()
     sierra_cell_info
 
     return
-    
-    OX=$( sh modem_at.sh $at_port "AT+QCAINFO"  | grep "+QCAINFO:"  )
-    QCA=$(echo $OX" " | grep -o -i "+QCAINFO: \"S[CS]\{2\}\".\+NWSCANMODE" | tr " " ",")
-
-
-    #
-    OX=$( sh modem_at.sh $at_port 'AT+QCFG="nwscanmode"'  | grep "+QCAINFO:"  )
-    QNSM=$(echo $OX | grep -o -i "+QCFG: \"NWSCANMODE\",[0-9]")
-    QNSM=$(echo "$QNSM" | grep -o "[0-9]")
-    if [ -n "$QNSM" ]; then
-        MODTYPE="6"
-        case $QNSM in
-        "0" )
-            NETMODE="1" ;;
-        "1" )
-            NETMODE="3" ;;
-        "2"|"5" )
-            NETMODE="5" ;;
-        "3" )
-            NETMODE="7" ;;
-        esac
-    fi
-    if [ -n "$QNWP" ]; then
-        MODTYPE="6"
-        case $QNWP in
-        "AUTO" )
-            NETMODE="1" ;;
-        "WCDMA" )
-            NETMODE="5" ;;
-        "LTE" )
-            NETMODE="7" ;;
-        "LTE:NR5G" )
-            NETMODE="8" ;;
-        "NR5G" )
-            NETMODE="9" ;;
-        esac
-    fi
-
-
-    #
-    OX=$( sh modem_at.sh $at_port 'AT+QNWPREFCFG="mode_pref"'  | grep "+QNWPREFCFG:"  )
-    QNWP=$(echo $OX | grep -o -i "+QNWPREFCFG: \"MODE_PREF\",[A-Z5:]\+" | cut -d, -f2)
-
-    #
-    OX=$( sh modem_at.sh $at_port "AT+QRSRP"  | grep "+QRSRP:"  )
-    QRSRP=$(echo "$OX" | grep -o -i "+QRSRP:[^,]\+,-[0-9]\{1,5\},-[0-9]\{1,5\},-[0-9]\{1,5\}[^ ]*")
-    if [ -n "$QRSRP" ] && [ "$RAT" != "WCDMA" ]; then
-        QRSRP1=$(echo $QRSRP | cut -d, -f1 | grep -o "[-0-9]\+")
-        QRSRP2=$(echo $QRSRP | cut -d, -f2)
-        QRSRP3=$(echo $QRSRP | cut -d, -f3)
-        QRSRP4=$(echo $QRSRP | cut -d, -f4)
-        QRSRPtype=$(echo $QRSRP | cut -d, -f5)
-        if [ "$QRSRPtype" == "NR5G" ]; then
-            if [ -n "$NR_SA" ]; then
-                RSCP=$QRSRP1
-                if [ -n "$QRPRP2" -a "$QRSRP2" != "-32768" ]; then
-                    RSCP1="RxD "$QRSRP2
-                fi
-                if [ -n "$QRSRP3" -a "$QRSRP3" != "-32768" ]; then
-                    RSCP=$RSCP" dBm<br />"$QRSRP3
-                fi
-                if [ -n "$QRSRP4" -a "$QRSRP4" != "-32768" ]; then
-                    RSCP1="RxD "$QRSRP4
-                fi
-            else
-                RSCP=$RSRPLTE
-                if [ -n "$QRSRP1" -a "$QRSRP1" != "-32768" ]; then
-                    RSCP=$RSCP" (4G) dBm<br />"$QRSRP1
-                    if [ -n "$QRSRP2" -a "$QRSRP2" != "-32768" ]; then
-                        RSCP="$RSCP,$QRSRP2"
-                        if [ -n "$QRSRP3" -a "$QRSRP3" != "-32768" ]; then
-                            RSCP="$RSCP,$QRSRP3"
-                            if [ -n "$QRSRP4" -a "$QRSRP4" != "-32768" ]; then
-                                RSCP="$RSCP,$QRSRP4"
-                            fi
-                        fi
-                        RSCP=$RSCP" (5G) "
-                    fi
-                fi
-            fi
-        elif [ "$QRSRP2$QRSRP3$QRSRP4" != "-44-44-44" -a -z "$QENG5" ]; then
-            RSCP=$QRSRP1
-            if [ "$QRSRP3$QRSRP4" == "-140-140" -o "$QRSRP3$QRSRP4" == "-44-44" -o "$QRSRP3$QRSRP4" == "-32768-32768" ]; then
-                RSCP1="RxD "$(echo $QRSRP | cut -d, -f2)
-            else
-                RSCP=$RSCP" dBm (RxD "$QRSRP2" dBm)<br />"$QRSRP3
-                RSCP1="RxD "$QRSRP4
-            fi
-        fi
-    fi
-
-
 }
 
 
