@@ -701,8 +701,7 @@ sierra_cell_info()
 
     else
         #SA，LTE，WCDMA模式
-        response=$(echo "$response" | grep "System mode:")
-        local rat=$(echo "$response" | awk '{print $3}')
+        local rat=$(echo "$response" | grep "System mode:" | awk '{print $3}')
         case $rat in
             "SA")
                 network_mode="NR5G-SA Mode"
