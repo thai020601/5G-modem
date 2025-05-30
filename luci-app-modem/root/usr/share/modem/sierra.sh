@@ -694,9 +694,9 @@ sierra_cell_info()
         endc_nr_band=$(echo "$nr_info" | grep "NR5G band:" | awk '{print $3}'| sed 's/n//')
         endc_nr_bw=$(echo "$nr_info" | grep "NR5G dl bw:" | awk '{print $4}')
         endc_nr_rsrp=$(echo "$nr_info" | grep "NR5G RSRP (dBm):" | awk '{print $4}')
-        endc_nr_rsrq=$(echo "$nr_info" | grep "NR5G Rx chan:" | awk '{print $4}')
+        endc_nr_rsrq=$(echo "$nr_info" | grep "NR5G RSRQ (dB):" | awk '{print $8}')
         endc_nr_sinr=$(echo "$nr_info" | grep "NR5G SINR (dB):" | awk '{print $4}')
-        endc_nr_arfcn=$(echo "$nr_info" | grep "NR5G SINR (dB):" | awk '{print $4}')
+        endc_nr_arfcn=$(echo "$nr_info" | grep "NR5G Rx chan:" | awk '{print $4}')
 
 
     else
@@ -796,6 +796,7 @@ get_sierra_info()
     sierra_cell_info
 
     return
+
 }
 
 
